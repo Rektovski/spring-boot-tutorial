@@ -45,6 +45,9 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+
+<!--                ვერსიის გარეშე შეცდომას წერს. -->
+                <version>2.7.5</version>
                 <configuration>
                     <excludes>
                         <exclude>

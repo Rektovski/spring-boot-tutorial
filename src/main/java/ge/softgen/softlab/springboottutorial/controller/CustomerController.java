@@ -24,7 +24,7 @@ public class CustomerController {
     }
 
 
-    @GetMapping("/")
+    @GetMapping()
     public List<Customer> getAll() {
         return customerService.getAll();
     }
@@ -94,7 +94,8 @@ public class CustomerController {
 
     @PutMapping("/{id}")
     public Customer update(@RequestBody Customer customer, @PathVariable int id) {
-        return customerService.updateCustomer(customer, id); // 204 წარმატებით დასრულდა და არაფერი ბრუნდება
+        return customerService.updateCustomer(customer, id);
+        // 204 წარმატებით დასრულდა და ბრუნდება კლიენტის ობიექტი
     }
 
     @DeleteMapping("/{id}")
