@@ -1,12 +1,11 @@
 package ge.softgen.softlab.springboottutorial.controller;
 
 import ge.softgen.softlab.springboottutorial.entity.Customer;
-import ge.softgen.softlab.springboottutorial.exception.NotFoundException;
+import ge.softgen.softlab.springboottutorial.service.CustomerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.ArrayList;
 import java.util.List;
 
 // @RequestMapping - გვეხმარება საბაზისო ლინკის შენახვაში. ანუ ამას რო გავწერ კოდში აღარ მომიწევს ბაზის წერა
@@ -18,85 +17,90 @@ import java.util.List;
 @RequestMapping("/customers")
 @RestController
 public class CustomerController {
-    private static int id = 1;
-    private List<Customer> db = new ArrayList<>();
+    private final CustomerService customerService;
+
+    public CustomerController(CustomerService customerService) {
+        this.customerService = customerService;
+    }
+
 
     @GetMapping("/")
     public List<Customer> getAll() {
+        return customerService.getAll();
+    }
+
+
+    /*
+    @GetMapping("/")
+    public List<Customer> getAll(@RequestParam(required=false) String firstName,
+                                 @RequestParam(required=false) String lastName) {
+        return customerService.getAll(firstName, lastName);
+    }
+
+    ასე თუ დავწერ სერვერზე ჩადებულ მასივს გაფილტრავს სახელისა და გვარის მიხედვით.
+    და მხოლოდ მის შესაბამის ობიექტებს დააბრუნებს.
+
+    ასე რომ იმუშავოს კოდმა საჭიროა გადაიწეროს CustomerService ფაილში შესაბამისი ფუნქცია ასე:
+
+    List<Customer> getAll(String firstName, String lastName);
+
+    ასევე უნდა გადაიწეროს CustomerServiceImplement ფაილში შესაბამისი ფუნქცია ასე:
+
+    public List<Customer> getAll(String firstName, String lastName) {
         return db;
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Customer> getById(@PathVariable int id){
-        try {
-//            Customer foundedCustomer = getCustomer(id); // optional
-            return ResponseEntity.ok(getCustomer(id)); // თუ კლიენტი არსებობს კლიენტის მონაცემი + კოდი 200
-        } catch (NotFoundException e) {
-            return ResponseEntity.notFound().build();
+    აქვე უნდა გავითვალისწინოთ, რომ CustomerServiceImplement ფაილში საჭიროა ამ მონაცემებით
+    გაფილტვრაც. ასე, რომ წინასწარ უნდა გადამოწმდეს სახელი ცალკე და გვარი ცალკე.
+    თუ ეს მონაცემი null არ არის და ცვლადი არაა ცარიელი (!variable.isEmpty())
+    მხოლოდ მაშინ გაფილტროს. ეს დავამატოთ წაშლილების ფაილთან ერთად:
+
+    public List<Customer> getAll(String firstName, String lastName) {
+        // ზოგადად მივწვდი ბაზას
+        var stream = db.stream().filter(customer -> customer.getFirstName()!=null);
+        if(firstName != null && !firstname.isEmpty()){
+            stream = stream().filter(customer -> customer.getFirstName().equals(firstName));
         }
+        if(lastName != null && !lastName.isEmpty()){
+            stream = db.stream().filter(customer -> customer.getLastName().equals(lastName));
+        }
+        return stream.toList();
     }
 
-//      ამით შემიძლია წაშლილი და წაუშლელი კლიენტების გადალაგება.
-//    და თუ ამ მეთოდს გამოვიყენ სერვერიდან მონაცემის წამოღებისას, მაშინ მხოლოდ
-//    წაუშლელი კლიენტების სია დამიბრუნდება.1
-//    @GetMapping("/customers")
-//    public List<Customer> getAll() {
-//        List<Customer> notDeletedCustomers = new ArrayList<>();
-//        for(Customer i: db){
-//            // თუ წაშლილი არაა შემიგროვე ახალ ლისთში
-//            if(!i.getDeleted()){
-//                notDeletedCustomers.add(i);
-//            }
-//        }
-//        return notDeletedCustomers;
-//    }
-//
-//    უკეთესი ვარიანტი
-//    @GetMapping("/customers")
-//    public List<Customer> getAll() {
-//        return db.stream().filter(customer -> !customer.getDeleted()).toList();
-//    }
+
+    */
+
+    public List<Customer> getAllNotDeleted() {
+        return customerService.getAllNotDeleted();
+    }
+
+    @GetMapping("/{id}")
+    public Customer getById(@PathVariable int id) {
+        return customerService.getCustomerByID(id);
+    }
 
     @PostMapping()
     public ResponseEntity<Customer> add(@RequestBody Customer customer) {
-        customer.setId(id++);
-        customer.setDeleted(false);
-        db.add(customer);
-        var location = UriComponentsBuilder.fromPath("/customers/"+id).build().toUri();
+        customerService.addCustomer(customer);
+//        ეს იგივეა რაც...
+//        customer = customerService.addCustomer(customer);
+//        კლიენტის გადაცემისას რადგან შიგნით სერვისში მისი ფროფერთები იცვლება გარეთაც შეიცვლება.
+//        ამიტომ შეიძლება ასე მოკლედ ჩაიწეროს.
+
+
+        var location = UriComponentsBuilder.fromPath("/customers/" + customer.getId()).build().toUri();
         return ResponseEntity.created(location).body(customer);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Object> update(@RequestBody Customer customer, @PathVariable int id){
-        try {
-            Customer foundedCustomer = getCustomer(id); // optional
-            foundedCustomer.setDeleted(true);
-            foundedCustomer.setFirstName(customer.getFirstName());
-            foundedCustomer.setLastName(customer.getLastName());
-            foundedCustomer.setBirthDate(customer.getBirthDate());
-            return ResponseEntity.ok(foundedCustomer); // 204 წარმატებით დასრულდა და არაფერი ბრუნდება
-        } catch (NotFoundException e) {
-            throw new RuntimeException(e);
-        }
-
+    public Customer update(@RequestBody Customer customer, @PathVariable int id) {
+        return customerService.updateCustomer(customer, id); // 204 წარმატებით დასრულდა და არაფერი ბრუნდება
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Customer> delete(@PathVariable int id){
-        try {
-            Customer foundedCustomer = getCustomer(id); // optional
-            foundedCustomer.setDeleted(true);
-            return ResponseEntity.noContent().build(); // 204 წარმატებით დასრულდა და არაფერი ბრუნდება
-        } catch (NotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Customer> delete(@PathVariable int id) {
+        customerService.deleteCustomer(id);
+        return ResponseEntity.noContent().build(); // 204 წარმატებით დასრულდა და არაფერი ბრუნდება
     }
 
-    private Customer getCustomer(int id) throws NotFoundException {
-        var optional = db.stream().filter(customer -> customer.getId()==id).findFirst();
-        if(optional.isEmpty()){
-            throw new NotFoundException("Customer not found");
-        }
-        return optional.get();
-    }
 }
