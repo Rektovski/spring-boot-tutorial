@@ -4,7 +4,8 @@ import lombok.Data;
 
 @Data
 public class CustomerSearchParams {
-    String firstName, lastName;
+    private String firstName;
+    private String lastName;
 }
 
 
@@ -31,9 +32,9 @@ public class CustomerSearchParams {
 ჩადებული სახელისა და გვარის ცვლადები აი ასე:
 
 
-@GetMapping("/")
+@GetMapping()
     public List<Customer> getAll(CustomerSearchParams searchParams) {
-        return customerService.getAll(searchParams.getFirstName, searchParams.getLastName);
+        return customerService.getAll(searchParams);
     }
 
 
@@ -43,20 +44,15 @@ public class CustomerSearchParams {
 
     და რა თქმა უნდა შესაცვლელი ხდება CustomerServiceImplement ფაილში შესაბამისი ფუნქციის შეცვლაც ასე:
 
-    public List<Customer> getAll(CustomerSearchParams searchParams) {
+public List<Customer> getAll(CustomerSearchParams searchParams) {
     // ასევე შემიძლი ვითომ დესტრუქტურიზაცია შევქმნა, რომ ობიექტზე მიწვდენაც არ დამჭირდეს ყველგან.
 
-    String firstName = searchParams.getFirstName();
-    String lastName = searchParams.getLastName();
+        String firstName = searchParams.getFirstName();
+        String lastName = searchParams.getLastName();
+        var stream = db.stream().filter(customer -> !customer.getDeleted());
 
-
-
-
-        // ეს ზოგადად მივწვდი ბაზას რო მერე წყნარად გამოვიყენო
-        var stream = db.stream().filter(customer -> customer.getFirstName()!=null);
-
-        if(firstName != null && !firstname.isEmpty()){
-            stream = stream().filter(customer -> customer.getFirstName().equals(firstName));
+        if(firstName != null && !firstName.isEmpty()){
+            stream = stream.filter(customer -> customer.getFirstName().equals(firstName));
         }
         if(lastName != null && !lastName.isEmpty()){
             stream = db.stream().filter(customer -> customer.getLastName().equals(lastName));

@@ -1,7 +1,7 @@
 package ge.softgen.softlab.springboottutorial.service;
 
 import ge.softgen.softlab.springboottutorial.entity.Customer;
-import ge.softgen.softlab.springboottutorial.exception.InvalidParameterException;
+import ge.softgen.softlab.springboottutorial.entity.CustomerSearchParams;
 import ge.softgen.softlab.springboottutorial.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -13,12 +13,18 @@ public class CustomerServiceImplement implements CustomerService {
     private static int id = 1;
     private List<Customer> db = new ArrayList<>(); // database
 
-    public List<Customer> getAll() {
-        return db;
-    }
+    public List<Customer> getAll(CustomerSearchParams searchParams) {
+        String firstName = searchParams.getFirstName();
+        String lastName = searchParams.getLastName();
+        var stream = db.stream().filter(customer -> !customer.getDeleted());
 
-    public List<Customer> getAllNotDeleted() {
-        return db.stream().filter(customer -> !customer.getDeleted()).toList();
+        if(firstName != null && !firstName.isEmpty()){
+            stream = stream.filter(customer -> customer.getFirstName().equals(firstName));
+        }
+        if(lastName != null && !lastName.isEmpty()){
+            stream = db.stream().filter(customer -> customer.getLastName().equals(lastName));
+        }
+        return stream.toList();
     }
 
     public Customer getCustomerByID(int id) {
@@ -46,10 +52,6 @@ public class CustomerServiceImplement implements CustomerService {
     }
 
     public Customer getCustomer(int id) {
-        if (id < 1 || id > getAll().size()) {
-            throw new InvalidParameterException("Id must be more than 0 and less," +
-                    " than maximum member's index from database");
-        }
         var optional = db.stream().filter(customer -> customer.getId() == id).findFirst();
         if (optional.isEmpty()) {
             throw new NotFoundException("Customer not found");

@@ -1,8 +1,6 @@
 package ge.softgen.softlab.springboottutorial.entity;
 
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.time.LocalDate;
 
@@ -12,7 +10,6 @@ import java.time.LocalDate;
 // შეგიძლია ნახო target file -ში, ამ ფაილის ანალოგი. იქ ყველაფერი წერია.
 
 @Data
-
 public class Customer {
     private Integer id;
     private String firstName, lastName;

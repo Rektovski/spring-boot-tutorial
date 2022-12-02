@@ -1,6 +1,7 @@
 package ge.softgen.softlab.springboottutorial.controller;
 
 import ge.softgen.softlab.springboottutorial.entity.Customer;
+import ge.softgen.softlab.springboottutorial.entity.CustomerSearchParams;
 import ge.softgen.softlab.springboottutorial.service.CustomerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,8 +26,8 @@ public class CustomerController {
 
 
     @GetMapping()
-    public List<Customer> getAll() {
-        return customerService.getAll();
+    public List<Customer> getAll(CustomerSearchParams searchParams) {
+        return customerService.getAll(searchParams);
     }
 
 
@@ -69,10 +70,6 @@ public class CustomerController {
 
 
     */
-
-    public List<Customer> getAllNotDeleted() {
-        return customerService.getAllNotDeleted();
-    }
 
     @GetMapping("/{id}")
     public Customer getById(@PathVariable int id) {
